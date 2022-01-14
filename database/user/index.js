@@ -1,0 +1,72 @@
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+
+const UserSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String },
+    address: [{ detail: { type: String }, for: { type: String } }],
+    phoneNumber: [{ type: Number }],
+  },
+  {
+    timestamps: true,
+  }
+);
+
+UserSchema.methods.generateJwtToken = function () {
+  return jwt.sign({ user: this._id.toString() }, "ZomatoAPP");
+};
+
+UserSchema.statics.findByEmailAndPhone = async ({ email, phoneNumber }) => {
+  //check whether email,phonenummber exist in our database or not.
+  const checkUserByEmail = await UserModel.findOne({ email });
+  const checkUserByPhone = await UserModel.findOne({ phoneNumber });
+  if (checkUserByEmail || checkUserByPhone) {
+    //return res.json({ user: "User already exists!" });
+    //the above line won't work bcz the res variable can't be accessed.
+    throw new Error("User already exists!");
+  }
+  return false;
+};
+
+UserSchema.statics.findByEmailAndPassword = async ({ email, password }) => {
+  const user = await UserModel.findOne({ email });
+  if (!user) throw new Error("User does not exist!!!");
+
+  //compare password
+  const doesPasswordMatch = await bcrypt.compare(password, user.password);
+  if (!doesPasswordMatch) throw new Error("Invalid Passwod!!!");
+  return user;
+};
+UserSchema.pre("save", function (next) {
+  const user = this;
+
+  //password is modified
+  if (!user.isModified("password")) return next();
+
+  //generate bcrypt salt
+  bcrypt.genSalt(8, (error, salt) => {
+    if (error) return next(error);
+
+    //hash the password
+    bcrypt.hash(user.password, salt, (error, hash) => {
+      if (error) return next(error);
+
+      //assgn hashed password
+      user.password = hash;
+      return next();
+    });
+  });
+});
+
+export const UserModel = mongoose.model("Users", UserSchema);
+
+//statics and methods
+//methods need to be instantiated(first stored in a variable)
+//Statics need not want to be instantiated
+//this can used in method but not in statics
+//pre is a special function that is used to interrupt the code at the middle and do a excess step
+//next is to continue its steps after the interruption
+// inside pre await can't be used so we use call back(ie., ()=>) inside pre
