@@ -1,6 +1,9 @@
 {
   "name": "zomato-server",
   "version": "1.0.0",
+  "engines": {
+    "node": "v14.17.6"
+  },
   "description": "zomato backend in nodejs",
   "main": "index.js",
   "scripts": {
