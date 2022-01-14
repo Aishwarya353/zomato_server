@@ -7,10 +7,10 @@ const GoogleStrategy = googleOAuth.Strategy;
 export default (passport) => {
   passport.use(
     new GoogleStrategy(
-      {
+      { 
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "http://localhost:4000/auth/google/callback",
+        callbackURL: "https://zomato-server-master.herokuapp.com/auth/google/callback",
       },
       async (accessToken, refreshToken, profile, done) => {
         //create a new user object
